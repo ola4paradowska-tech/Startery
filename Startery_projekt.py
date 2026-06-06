@@ -88,12 +88,24 @@ app_data = {
     "primer_name": "",
     "primer_sequence": "",
 
+    "forward_primer": "",
+    "reverse_primer": "",
+
     "sequence_widget": None,
     "start_entry": None,
     "end_entry": None,
 
     "selection_label": None
 }
+def reverse_complement(sequence):
+
+    table = str.maketrans(
+        "ATGC",
+        "TACG"
+    )
+
+    return sequence.translate(table)[::-1]
+
 def open_gene_window(gene_name, sequence):
 
     app_data["gene"] = gene_name
@@ -132,7 +144,8 @@ def open_gene_window(gene_name, sequence):
 
     primer_button = tk.Button(
         left_frame,
-        text="Starter"
+        text="Starter",
+        command=lambda: show_primer(right_frame)
     )
 
     primer_button.pack(fill="x", padx=10, pady=10)
@@ -166,7 +179,23 @@ def show_sequence(right_frame):
     )
 
     text.insert("1.0", app_data["sequence"])
+    if app_data["selected_range"] is not None:
+        start = app_data["range_start"]
+        end = app_data["range_end"]
 
+        start_index = f"1.{start - 1}"
+        end_index = f"1.{end}"
+
+        text.tag_add(
+            "highlight",
+            start_index,
+            end_index
+        )
+
+        text.tag_config(
+            "highlight",
+            background="yellow"
+        )
     text.config(state="disabled")
 
 def highlight_range():
@@ -265,10 +294,23 @@ def show_range(right_frame):
     controls_frame = tk.Frame(right_frame)
     controls_frame.pack(fill="x", padx=10, pady=10)
 
+    if app_data["selected_range"] is None:
+
+        selection_text = "Nie wybrano zakresu"
+
+    else:
+
+        start = app_data["range_start"]
+        end = app_data["range_end"]
+
+        selection_text = (
+            f"Wybrany zakres: {start}-{end}    "
+            f"Długość fragmentu: {end - start + 1} bp"
+        )
+
     selection_label = tk.Label(
         right_frame,
-        text="Nie wybrano zakresu",
-        font=("Arial", 10)
+        text=selection_text
     )
 
     selection_label.pack(pady=5)
@@ -285,6 +327,11 @@ def show_range(right_frame):
         width=10
     )
     start_entry.grid(row=0, column=1, padx=5)
+    if app_data["range_start"] is not None:
+        start_entry.insert(
+            0,
+            str(app_data["range_start"])
+        )
 
     tk.Label(
         controls_frame,
@@ -296,6 +343,11 @@ def show_range(right_frame):
         width=10
     )
     end_entry.grid(row=0, column=3, padx=5)
+    if app_data["range_end"] is not None:
+        end_entry.insert(
+            0,
+            str(app_data["range_end"])
+        )
 
     highlight_button = tk.Button(
         controls_frame,
@@ -316,12 +368,121 @@ def show_range(right_frame):
         padx=10,
         pady=10
     )
-
     text.insert("1.0", app_data["sequence"])
+
+    if app_data["selected_range"] is not None:
+        start = app_data["range_start"]
+        end = app_data["range_end"]
+
+        start_index = f"1.{start - 1}"
+        end_index = f"1.{end}"
+
+        text.tag_add(
+            "highlight",
+            start_index,
+            end_index
+        )
+
+        text.tag_config(
+            "highlight",
+            background="yellow"
+        )
+
+    text.config(state="disabled")
 
     app_data["start_entry"] = start_entry
     app_data["end_entry"] = end_entry
     app_data["sequence_widget"] = text
+
+def show_primer(right_frame):
+
+    global forward_label
+    global reverse_label
+
+    for widget in right_frame.winfo_children():
+        widget.destroy()
+
+    title_label = tk.Label(
+        right_frame,
+        text=app_data["gene"],
+        font=("Arial", 16)
+    )
+    title_label.pack(pady=10)
+
+    range_text = tk.Label(
+        right_frame,
+        text=(
+            f"Wybrany zakres: "
+            f"{app_data['range_start']} - "
+            f"{app_data['range_end']}"
+        )
+    )
+
+    range_text.pack(pady=5)
+
+    length_label = tk.Label(
+        right_frame,
+        text="Długość startera: 20 bp"
+    )
+
+    length_label.pack(pady=5)
+
+    generate_button = tk.Button(
+        right_frame,
+        text="Generuj",
+        command=generate_primers
+    )
+
+    generate_button.pack(pady=10)
+
+    forward_label = tk.Label(
+        right_frame,
+        text="Forward:"
+    )
+
+    forward_label.pack(pady=10)
+
+    reverse_label = tk.Label(
+        right_frame,
+        text="Reverse:"
+    )
+
+    reverse_label.pack(pady=10)
+
+def generate_primers():
+
+    start = app_data["range_start"]
+    end = app_data["range_end"]
+
+    if start is None or end is None:
+
+        messagebox.showwarning(
+            "Uwaga",
+            "Najpierw wybierz zakres."
+        )
+
+        return
+
+    primer_length = 20
+
+    fragment = app_data["sequence"][start-1:end]
+
+    forward = fragment[:primer_length]
+
+    reverse_part = fragment[-primer_length:]
+
+    reverse = reverse_complement(reverse_part)
+
+    app_data["forward_primer"] = forward
+    app_data["reverse_primer"] = reverse
+
+    forward_label.config(
+        text=f"Forward:\n{forward}"
+    )
+
+    reverse_label.config(
+        text=f"Reverse:\n{reverse}"
+    )
 
 def select_gene():
 
