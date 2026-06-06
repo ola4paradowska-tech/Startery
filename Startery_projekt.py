@@ -77,23 +77,70 @@ with open(report_file, "w", encoding="utf-8") as report:
         report.write("-" * 50 + "\n")
 
 #PROGRAM
+current_gene = ""
+current_sequence = ""
 def open_gene_window(gene_name, sequence):
+
+    global current_gene
+    global current_sequence
+
+    current_gene = gene_name
+    current_sequence = sequence
 
     for widget in root.winfo_children():
         widget.destroy()
 
     root.title(gene_name)
-    root.geometry("1000x700")
+    root.geometry("1200x800")
+
+    # LEWY PANEL
+    left_frame = tk.Frame(root, width=200)
+    left_frame.pack(side="left", fill="y")
+
+    # PRAWY PANEL
+    right_frame = tk.Frame(root)
+    right_frame.pack(side="right", fill="both", expand=True)
+
+    # PRZYCISKI
+    sequence_button = tk.Button(
+        left_frame,
+        text="Sekwencja",
+        command=lambda: show_sequence(right_frame)
+    )
+
+    sequence_button.pack(fill="x", padx=10, pady=10)
+
+    range_button = tk.Button(
+        left_frame,
+        text="Wybór zakresu"
+    )
+
+    range_button.pack(fill="x", padx=10, pady=10)
+
+    primer_button = tk.Button(
+        left_frame,
+        text="Starter"
+    )
+
+    primer_button.pack(fill="x", padx=10, pady=10)
+
+    show_sequence(right_frame)
+
+def show_sequence(right_frame):
+
+    for widget in right_frame.winfo_children():
+        widget.destroy()
 
     title_label = tk.Label(
-        root,
-        text=gene_name,
+        right_frame,
+        text=current_gene,
         font=("Arial", 16)
     )
+
     title_label.pack(pady=10)
 
     text = tk.Text(
-        root,
+        right_frame,
         wrap="word",
         font=("Courier New", 11)
     )
@@ -105,7 +152,7 @@ def open_gene_window(gene_name, sequence):
         pady=10
     )
 
-    text.insert("1.0", sequence)
+    text.insert("1.0", current_sequence)
 
     text.config(state="disabled")
 
