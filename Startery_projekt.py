@@ -80,9 +80,19 @@ with open(report_file, "w", encoding="utf-8") as report:
 app_data = {
     "gene": "",
     "sequence": "",
+
     "selected_range": None,
+    "range_start": None,
+    "range_end": None,
+
     "primer_name": "",
-    "primer_sequence": ""
+    "primer_sequence": "",
+
+    "sequence_widget": None,
+    "start_entry": None,
+    "end_entry": None,
+
+    "selection_label": None
 }
 def open_gene_window(gene_name, sequence):
 
@@ -159,6 +169,80 @@ def show_sequence(right_frame):
 
     text.config(state="disabled")
 
+def highlight_range():
+
+    try:
+        start = int(app_data["start_entry"].get())
+        end = int(app_data["end_entry"].get())
+
+    except ValueError:
+        messagebox.showerror(
+            "Błąd",
+            "Start i Koniec muszą być liczbami."
+        )
+        return
+
+    sequence_length = len(app_data["sequence"])
+
+    if start < 1:
+        messagebox.showerror(
+            "Błąd",
+            "Start musi być większy od 0."
+        )
+        return
+
+    if end > sequence_length:
+        messagebox.showerror(
+            "Błąd",
+            f"Sekwencja ma tylko {sequence_length} nukleotydów."
+        )
+        return
+
+    if start >= end:
+        messagebox.showerror(
+            "Błąd",
+            "Koniec musi być większy od Start."
+        )
+        return
+
+    app_data["range_start"] = start
+    app_data["range_end"] = end
+    app_data["selected_range"] = (start, end)
+
+    fragment_length = end - start + 1
+
+    app_data["selection_label"].config(
+        text=(
+            f"Wybrany zakres: {start}-{end}    "
+            f"Długość fragmentu: {fragment_length} bp"
+        )
+    )
+    text = app_data["sequence_widget"]
+
+    text.config(state="normal")
+
+    text.tag_remove(
+        "highlight",
+        "1.0",
+        tk.END
+    )
+
+    start_index = f"1.{start-1}"
+    end_index = f"1.{end}"
+
+    text.tag_add(
+        "highlight",
+        start_index,
+        end_index
+    )
+
+    text.tag_config(
+        "highlight",
+        background="yellow"
+    )
+
+    text.config(state="disabled")
+
 def show_range(right_frame):
 
     for widget in right_frame.winfo_children():
@@ -171,8 +255,25 @@ def show_range(right_frame):
         )
     title_label.pack(pady=10)
 
+    length_label = tk.Label(
+        right_frame,
+        text=f"Długość sekwencji: {len(app_data['sequence'])} bp",
+        font=("Arial", 10)
+    )
+    length_label.pack()
+
     controls_frame = tk.Frame(right_frame)
     controls_frame.pack(fill="x", padx=10, pady=10)
+
+    selection_label = tk.Label(
+        right_frame,
+        text="Nie wybrano zakresu",
+        font=("Arial", 10)
+    )
+
+    selection_label.pack(pady=5)
+
+    app_data["selection_label"] = selection_label
 
     tk.Label(
         controls_frame,
@@ -198,7 +299,8 @@ def show_range(right_frame):
 
     highlight_button = tk.Button(
         controls_frame,
-        text="Podświetl"
+        text="Podświetl",
+        command=highlight_range
     )
     highlight_button.grid(row=0, column=4, padx=10)
 
@@ -217,6 +319,9 @@ def show_range(right_frame):
 
     text.insert("1.0", app_data["sequence"])
 
+    app_data["start_entry"] = start_entry
+    app_data["end_entry"] = end_entry
+    app_data["sequence_widget"] = text
 
 def select_gene():
 
@@ -230,13 +335,13 @@ def select_gene():
         return
 
     gene_file = listbox.get(selected[0])
-
+    gene_name = os.path.splitext(gene_file)[0]
     filepath = os.path.join(CUT_DIR, gene_file)
 
     with open(filepath, "r", encoding="utf-8") as f:
         sequence = f.read()
 
-    open_gene_window(gene_file, sequence)
+    open_gene_window(gene_name, sequence)
 
 root = tk.Tk()
 root.title("Wczytaj gen")
