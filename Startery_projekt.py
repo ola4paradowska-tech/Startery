@@ -1,15 +1,18 @@
 import os
 import re
+import tkinter as tk
+from tkinter import messagebox
 
 INPUT_DIR = r"C:\Users\ola4p\Desktop\FASTA"
-OUTPUT_DIR = r"C:\Users\ola4p\Desktop\FASTA\Cut"
+CUT_DIR = r"C:\Users\ola4p\Desktop\FASTA\Cut"
 REPORT_DIR = r"C:\Users\ola4p\Desktop\FASTA\Raport"
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(CUT_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
 
 report_data = []
 
+#CZSZCZENIE
 for filename in os.listdir(INPUT_DIR):
     if not filename.lower().endswith((".fasta", ".fa", ".fna")):
         continue
@@ -36,9 +39,9 @@ for filename in os.listdir(INPUT_DIR):
 
     final_length = len(cleaned_sequence)
 
-    output_file = os.path.join(OUTPUT_DIR, f"{gene}.fasta")
+    cut_file = os.path.join(CUT_DIR, f"{gene}.fasta")
 
-    with open(output_file, "w", encoding="utf-8") as out:
+    with open(cut_file, "w", encoding="utf-8") as out:
         out.write(cleaned_sequence)
 
     report_data.append([
@@ -72,3 +75,89 @@ with open(report_file, "w", encoding="utf-8") as report:
         report.write(f"Usunięte N: {n_count}\n")
         report.write(f"Długość po czyszczeniu: {final_length}\n")
         report.write("-" * 50 + "\n")
+
+#PROGRAM
+def open_gene_window(gene_name, sequence):
+
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    root.title(gene_name)
+    root.geometry("1000x700")
+
+    title_label = tk.Label(
+        root,
+        text=gene_name,
+        font=("Arial", 16)
+    )
+    title_label.pack(pady=10)
+
+    text = tk.Text(
+        root,
+        wrap="word",
+        font=("Courier New", 11)
+    )
+
+    text.pack(
+        fill="both",
+        expand=True,
+        padx=10,
+        pady=10
+    )
+
+    text.insert("1.0", sequence)
+
+    text.config(state="disabled")
+
+def select_gene():
+
+    selected = listbox.curselection()
+
+    if not selected:
+        messagebox.showwarning(
+            "Uwaga",
+            "Wybierz gen z listy."
+        )
+        return
+
+    gene_file = listbox.get(selected[0])
+
+    filepath = os.path.join(CUT_DIR, gene_file)
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        sequence = f.read()
+
+    open_gene_window(gene_file, sequence)
+
+root = tk.Tk()
+root.title("Wczytaj gen")
+root.geometry("400x500")
+
+title_label = tk.Label(
+    root,
+    text="Wybierz gen",
+    font=("Arial", 16)
+)
+title_label.pack(pady=10)
+
+listbox = tk.Listbox(
+    root,
+    width=40,
+    height=15
+)
+listbox.pack(padx=10, pady=10)
+
+for file in os.listdir(CUT_DIR):
+
+    if file.endswith(".fasta"):
+        listbox.insert(tk.END, file)
+
+select_button = tk.Button(
+    root,
+    text="Wczytaj gen",
+    command=select_gene
+)
+select_button.pack(pady=10)
+
+root.mainloop()
+
