@@ -77,15 +77,17 @@ with open(report_file, "w", encoding="utf-8") as report:
         report.write("-" * 50 + "\n")
 
 #PROGRAM
-current_gene = ""
-current_sequence = ""
+app_data = {
+    "gene": "",
+    "sequence": "",
+    "selected_range": None,
+    "primer_name": "",
+    "primer_sequence": ""
+}
 def open_gene_window(gene_name, sequence):
 
-    global current_gene
-    global current_sequence
-
-    current_gene = gene_name
-    current_sequence = sequence
+    app_data["gene"] = gene_name
+    app_data["sequence"] = sequence
 
     for widget in root.winfo_children():
         widget.destroy()
@@ -112,7 +114,8 @@ def open_gene_window(gene_name, sequence):
 
     range_button = tk.Button(
         left_frame,
-        text="Wybór zakresu"
+        text="Wybór zakresu",
+        command=lambda: show_range(right_frame)
     )
 
     range_button.pack(fill="x", padx=10, pady=10)
@@ -133,7 +136,7 @@ def show_sequence(right_frame):
 
     title_label = tk.Label(
         right_frame,
-        text=current_gene,
+        text=app_data["gene"],
         font=("Arial", 16)
     )
 
@@ -152,9 +155,68 @@ def show_sequence(right_frame):
         pady=10
     )
 
-    text.insert("1.0", current_sequence)
+    text.insert("1.0", app_data["sequence"])
 
     text.config(state="disabled")
+
+def show_range(right_frame):
+
+    for widget in right_frame.winfo_children():
+            widget.destroy()
+
+    title_label = tk.Label(
+            right_frame,
+            text=app_data["gene"],
+            font=("Arial", 16)
+        )
+    title_label.pack(pady=10)
+
+    controls_frame = tk.Frame(right_frame)
+    controls_frame.pack(fill="x", padx=10, pady=10)
+
+    tk.Label(
+        controls_frame,
+        text="Start:"
+    ).grid(row=0, column=0, padx=5)
+
+    start_entry = tk.Entry(
+        controls_frame,
+        width=10
+    )
+    start_entry.grid(row=0, column=1, padx=5)
+
+    tk.Label(
+        controls_frame,
+        text="Koniec:"
+    ).grid(row=0, column=2, padx=5)
+
+    end_entry = tk.Entry(
+        controls_frame,
+        width=10
+    )
+    end_entry.grid(row=0, column=3, padx=5)
+
+    highlight_button = tk.Button(
+        controls_frame,
+        text="Podświetl"
+    )
+    highlight_button.grid(row=0, column=4, padx=10)
+
+    text = tk.Text(
+        right_frame,
+        wrap="word",
+        font=("Courier New", 11)
+    )
+
+    text.pack(
+        fill="both",
+        expand=True,
+        padx=10,
+        pady=10
+    )
+
+    text.insert("1.0", app_data["sequence"])
+
 
 def select_gene():
 
