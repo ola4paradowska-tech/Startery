@@ -28,7 +28,7 @@ for filename in os.listdir(INPUT_DIR):
     gene_match = re.search(r"\s([A-Za-z0-9_-]+)\s+\[organism=", header)
     gene = gene_match.group(1) if gene_match else "UNKNOWN_GENE"
 
-    organism_match = re.search(r"\[organism=(.*?)\]", header)
+    organism_match = re.search(r"\[organism=(.*?)]", header)
     organism = organism_match.group(1) if organism_match else "UNKNOWN"
 
     original_length = len(sequence)
