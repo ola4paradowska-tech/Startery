@@ -3,6 +3,7 @@ import re
 from collections import Counter
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 from Bio import Entrez
 
 Entrez.email = "ola4paradowska@gmail.com"
@@ -19,6 +20,8 @@ report_data = []
 root = tk.Tk()
 root.title("Gene Data Hub")
 root.geometry("850x650")
+
+search_results = []
 
 ###POBIERANIE###
 def search_gene(gene_name, organism):
@@ -61,43 +64,65 @@ def on_search():
     gene = gene_entry.get().strip()
     organism = organism_entry.get().strip()
 
-    results = search_gene(gene, organism)
+    global search_results
+
+    search_results = search_gene(gene, organism)
 
     results_listbox.delete(0, tk.END)
 
-    for record in results:
+    if not organism:
+        messagebox.showwarning(
+            "Brak danych",
+            "Podaj nazwę organizmu."
+        )
+        return
+
+    if not gene:
+        messagebox.showwarning(
+            "Brak danych",
+            "Podaj nazwę genu."
+        )
+        return
+
+    if not search_results:
+        messagebox.showerror(
+            "Brak wyników",
+            "Nie znaleziono genu.\n\nSprawdź poprawność wpisanych danych."
+        )
+        return
+
+    for record in search_results:
         results_listbox.insert(
             tk.END,
             f"{record['name']} | {record['organism']}"
         )
 
+def on_select(event):
+    selected = results_listbox.curselection()
 
+    if not selected:
+        return
 
+    index = selected[0]
 
-#def fetch_fasta(record_id):
-#pass
+    record = search_results[index]
 
-#def analyze_sequence(sequence):
-#pass
+    gene_label.config(
+        text=f"Gen: {record['name']}"
+    )
 
-#def save_fasta(sequence, gene, organism):
-#pass
+    organism_label.config(
+        text=f"Organizm: {record['organism']}"
+    )
 
-#def save_report(report_data):
-#pass
+    description_label.config(
+        text=f"Opis: {record['description']}"
+    )
 
-#def prepare_data(record_id):
-#fasta = fetch_fasta(record_id)
+    gene_id_label.config(
+        text=f"ID genu: {record['id']}"
+    )
 
-#```
-#analysis = analyze_sequence(fasta)
-
-#save_fasta(...)
-
-#save_report(...)
-
-#return analysis
-#```
 
 ###GUI###
 search_frame = ttk.LabelFrame(root, text="Wyszukiwanie genu")
@@ -121,6 +146,7 @@ results_frame.pack(fill="both", expand=True, padx=10, pady=10)
 
 results_listbox = tk.Listbox(results_frame, height=10)
 results_listbox.pack(fill="both", expand=True, padx=5, pady=5)
+results_listbox.bind("<<ListboxSelect>>", on_select)
 
 summary_frame = ttk.LabelFrame(root, text="Informacje o sekwencji")
 summary_frame.pack(fill="x", padx=10, pady=10)
@@ -131,11 +157,11 @@ gene_label.pack(anchor="w", padx=5, pady=2)
 organism_label = ttk.Label(summary_frame, text="Organizm: -")
 organism_label.pack(anchor="w", padx=5, pady=2)
 
-length_label = ttk.Label(summary_frame, text="Długość: -")
-length_label.pack(anchor="w", padx=5, pady=2)
+description_label = ttk.Label(summary_frame, text="Opis: -")
+description_label.pack(anchor="w", padx=5, pady=2)
 
-invalid_label = ttk.Label(summary_frame, text="Nietypowe nukleotydy: -")
-invalid_label.pack(anchor="w", padx=5, pady=2)
+gene_id_label = ttk.Label(summary_frame, text="ID genu: -")
+gene_id_label.pack(anchor="w", padx=5, pady=2)
 
 buttons_frame = ttk.Frame(root)
 buttons_frame.pack(fill="x", padx=10, pady=10)
