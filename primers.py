@@ -76,49 +76,14 @@ def score_primer(sequence):
         "score": score
     }
 
-def generate_primers():
-
-    try:
-        primer_length = int(
-            app_data["primer_length_entry"].get()
-        )
-    except ValueError:
-        messagebox.showerror(
-            "Błąd",
-            "Podaj prawidłową długość startera."
-        )
-        return
-    app_data["primer_length"] = primer_length
-    start = app_data["range_start"]
-    end = app_data["range_end"]
-
-    if start is None or end is None:
-
-        messagebox.showwarning(
-            "Uwaga",
-            "Najpierw wybierz zakres."
-        )
-
-        return
-
-    primer_length = int(app_data["primer_length_entry"].get())
+def generate_current_primers(primer_length, start, end):
 
     fragment = app_data["sequence"][start-1:end]
-    if len(fragment) < primer_length * 2:
-        messagebox.showerror(
-            "Błąd",
-            "Wybrany fragment jest zbyt krótki dla tej długości starterów."
-        )
-        return
 
-    # Startery z zakresu użytkownika
     forward = fragment[:primer_length]
 
     reverse_part = fragment[-primer_length:]
     reverse = reverse_complement(reverse_part)
-
-    app_data["forward_primer"] = forward
-    app_data["reverse_primer"] = reverse
 
     forward_gc = gc_content(forward)
     reverse_gc = gc_content(reverse)
@@ -135,6 +100,9 @@ def generate_primers():
         forward_warning.append("Różnica Tm > 2°C")
         reverse_warning.append("Różnica Tm > 2°C")
 
+    app_data["forward_primer"] = forward
+    app_data["reverse_primer"] = reverse
+
     app_data["forward_gc"] = forward_gc
     app_data["reverse_gc"] = reverse_gc
 
@@ -146,6 +114,7 @@ def generate_primers():
 
     app_data["primer_generated"] = True
 
+def generate_candidate_primers(primer_length, start, end):
 
     best = find_best_primers(
         app_data["sequence"],
@@ -161,11 +130,6 @@ def generate_primers():
         )
         return
 
-    forward = best["forward"]["sequence"]
-    reverse = best["reverse"]["sequence"]
-
-    # zapis propozycji programu
-
     app_data["candidate_forward"] = best["forward"]["sequence"]
     app_data["candidate_reverse"] = best["reverse"]["sequence"]
 
@@ -178,8 +142,13 @@ def generate_primers():
     app_data["candidate_forward_tm"] = best["forward"]["tm"]
     app_data["candidate_reverse_tm"] = best["reverse"]["tm"]
 
-    app_data["candidate_forward_warning"] = best["forward"]["warnings"].copy()
-    app_data["candidate_reverse_warning"] = best["reverse"]["warnings"].copy()
+    app_data["candidate_forward_warning"] = (
+        best["forward"]["warnings"].copy()
+    )
+
+    app_data["candidate_reverse_warning"] = (
+        best["reverse"]["warnings"].copy()
+    )
 
     tm_difference = abs(
         best["forward"]["tm"]
@@ -187,6 +156,7 @@ def generate_primers():
     )
 
     if tm_difference > 2:
+
         app_data["candidate_forward_warning"].append(
             "Różnica Tm > 2°C"
         )
@@ -194,6 +164,62 @@ def generate_primers():
         app_data["candidate_reverse_warning"].append(
             "Różnica Tm > 2°C"
         )
+
+def generate_primers():
+
+    try:
+        primer_length = int(
+            app_data["primer_length_entry"].get()
+        )
+
+    except ValueError:
+        messagebox.showerror(
+            "Błąd",
+            "Podaj prawidłową długość startera."
+        )
+        return
+
+    if primer_length < 10 or primer_length > 40:
+        messagebox.showerror(
+            "Błąd",
+            "Długość startera musi mieścić się w zakresie 10–40 nukleotydów."
+        )
+        return
+
+    start = app_data["range_start"]
+    end = app_data["range_end"]
+
+    if start is None or end is None:
+
+        messagebox.showwarning(
+            "Uwaga",
+            "Najpierw wybierz zakres."
+        )
+        return
+
+    fragment = app_data["sequence"][start-1:end]
+
+    if len(fragment) < primer_length * 2:
+
+        messagebox.showerror(
+            "Błąd",
+            "Wybrany fragment jest zbyt krótki."
+        )
+        return
+
+    app_data["primer_length"] = primer_length
+
+    generate_current_primers(
+        primer_length,
+        start,
+        end
+    )
+
+    generate_candidate_primers(
+        primer_length,
+        start,
+        end
+    )
 
 def find_best_primers(sequence, start, end, primer_length):
 

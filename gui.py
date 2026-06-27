@@ -538,11 +538,19 @@ def reset_primers():
     app_data["forward_primer"] = ""
     app_data["reverse_primer"] = ""
     app_data["primer_generated"] = False
+    app_data["candidate_forward"] = ""
+    app_data["candidate_reverse"] = ""
+
+    app_data["candidate_start"] = None
+    app_data["candidate_end"] = None
+
+    app_data["candidate_forward_warning"] = []
+    app_data["candidate_reverse_warning"] = []
 
     forward_label.config(text="Forward:")
     reverse_label.config(text="Reverse:")
 
-    show_primer(forward_label.master)
+    show_primer(app_data["right_frame"])
 def select_gene():
 
     selected = app_data["listbox"].curselection()
