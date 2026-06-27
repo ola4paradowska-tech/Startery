@@ -1,4 +1,5 @@
 import tkinter as tk
+from export import save_pdf, save_fasta
 from tkinter import messagebox
 
 from config import *
@@ -520,10 +521,42 @@ def show_primer(right_frame):
     accept_button = tk.Button(
         right_frame,
         text="Zatwierdź",
-        state="disabled"
+        command=accept_candidate
     )
 
     accept_button.pack(pady=10)
+
+    buttons_frame = tk.Frame(right_frame)
+    buttons_frame.pack(pady=10)
+
+    state = "normal" if app_data["primer_generated"] else "disabled"
+
+    pdf_button = tk.Button(
+        buttons_frame,
+        text="Zapisz PDF",
+        width=15,
+        command=save_pdf,
+        state = state
+    )
+
+    pdf_button.pack(
+        side="left",
+        padx=5
+    )
+
+    fasta_button = tk.Button(
+        buttons_frame,
+        text="Zapisz FASTA",
+        width=15,
+        command=save_fasta,
+        state = state
+    )
+
+    fasta_button.pack(
+        side="left",
+        padx=5
+    )
+
 
     reset_button = tk.Button(
         right_frame,
@@ -571,5 +604,27 @@ def select_gene():
 
     open_gene_window(gene_name, sequence)
 
+def accept_candidate():
 
+    app_data["forward_primer"] = app_data["candidate_forward"]
+    app_data["reverse_primer"] = app_data["candidate_reverse"]
+
+    app_data["forward_gc"] = app_data["candidate_forward_gc"]
+    app_data["reverse_gc"] = app_data["candidate_reverse_gc"]
+
+    app_data["forward_tm"] = app_data["candidate_forward_tm"]
+    app_data["reverse_tm"] = app_data["candidate_reverse_tm"]
+
+    app_data["forward_warning"] = app_data["candidate_forward_warning"].copy()
+    app_data["reverse_warning"] = app_data["candidate_reverse_warning"].copy()
+
+    app_data["range_start"] = app_data["candidate_start"]
+    app_data["range_end"] = app_data["candidate_end"]
+
+    app_data["selected_range"] = (
+        app_data["candidate_start"],
+        app_data["candidate_end"]
+    )
+
+    show_primer(app_data["right_frame"])
 

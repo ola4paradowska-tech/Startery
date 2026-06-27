@@ -4,6 +4,9 @@ INPUT_DIR = r"C:\Users\ola4p\Desktop\FASTA"
 CUT_DIR = r"C:\Users\ola4p\Desktop\FASTA\Cut"
 REPORT_DIR = r"C:\Users\ola4p\Desktop\FASTA\Raport"
 
+PDF_DIR = os.path.join(REPORT_DIR, "PDF")
+FASTA_REPORT_DIR = os.path.join(REPORT_DIR, "FASTA")
+
 os.makedirs(CUT_DIR, exist_ok=True)
 os.makedirs(REPORT_DIR, exist_ok=True)
 
