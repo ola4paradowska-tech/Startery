@@ -4,7 +4,6 @@ from reportlab.platypus import (
     SimpleDocTemplate,
     Paragraph,
     Spacer,
-    Preformatted,
 )
 from datetime import datetime
 from reportlab.lib.styles import getSampleStyleSheet
@@ -43,25 +42,64 @@ pdfmetrics.registerFont(
 
 def format_sequence(sequence):
 
-    result = []
+    start = app_data["range_start"] - 1
+    end = app_data["range_end"]
 
-    for i in range(0, len(sequence), 50):
+    primer_len = len(app_data["forward_primer"])
 
-        fragment = sequence[i:i+50]
+    forward_start = start
+    forward_end = start + primer_len
 
-        groups = [
-            fragment[j:j+10]
-            for j in range(0, len(fragment), 10)
-        ]
+    reverse_start = end - primer_len
+    reverse_end = end
+
+    lines = []
+
+    for row_start in range(0, len(sequence), 50):
+
+        row = []
+
+        fragment = sequence[row_start:row_start + 50]
+
+        for i, nt in enumerate(fragment):
+
+            pos = row_start + i
+
+            if forward_start <= pos < forward_end:
+
+                row.append(
+                    f'<font backColor="lightgreen">{nt}</font>'
+                )
+
+            elif reverse_start <= pos < reverse_end:
+
+                row.append(
+                    f'<font backColor="salmon">{nt}</font>'
+                )
+
+            elif start <= pos < end:
+
+                row.append(
+                    f'<font backColor="yellow">{nt}</font>'
+                )
+
+            else:
+
+                row.append(nt)
+
+            if (i + 1) % 10 == 0 and i != 49:
+                row.append(" ")
+
+        number = f"{row_start + 1:>5}".replace(" ", "&nbsp;")
 
         line = (
-            f"{i+1:<6}"
-            + " ".join(groups)
+                f'<font color="gray"><b>{number}</b></font>&nbsp;&nbsp;'
+                + "".join(row)
         )
 
-        result.append(line)
+        lines.append(line)
 
-    return "\n".join(result)
+    return lines
 
 def save_pdf():
 
@@ -101,20 +139,12 @@ def save_pdf():
         parent=styles["Code"],
         fontName="CourierNew",
         fontSize=9,
-        leading=12
+        leading=13,
+        spaceAfter=1
     )
     pdf = SimpleDocTemplate(filepath)
 
     story = []
-
-    story.append(
-        Paragraph(
-            "<b>Raport projektowania starterów PCR</b>",
-            title
-        )
-    )
-
-    story.append(Spacer(1,20))
 
     story.append(
         Paragraph(
@@ -163,7 +193,7 @@ def save_pdf():
     story.append(
         Paragraph(
             app_data["forward_primer"],
-            styles["Code"]
+            code
         )
     )
 
@@ -189,28 +219,16 @@ def save_pdf():
     )
 
     if app_data["forward_warning"]:
-
-        warning = "<br/>".join(
-            app_data["forward_warning"]
-        )
-
+        warning = "<br/>".join(app_data["forward_warning"])
     else:
-
         warning = "Brak"
 
-        story.append(
-            Paragraph(
+    story.append(
+        Paragraph(
             f"<b>Ostrzeżenia:</b><br/>{warning}",
             normal
-            )
         )
-
-        story.append(
-            Paragraph(
-                "<br/>".join(app_data["forward_warning"]),
-                normal
-            )
-        )
+    )
 
     story.append(Spacer(1,20))
 
@@ -224,7 +242,7 @@ def save_pdf():
     story.append(
         Paragraph(
             app_data["reverse_primer"],
-            styles["Code"]
+            code
         )
     )
 
@@ -250,13 +268,18 @@ def save_pdf():
     )
 
     if app_data["reverse_warning"]:
-
-        story.append(
-            Paragraph(
-                "<br/>".join(app_data["reverse_warning"]),
-                normal
-            )
+        warning = "<br/>".join(
+            app_data["reverse_warning"]
         )
+    else:
+        warning = "Brak"
+
+    story.append(
+        Paragraph(
+            f"<b>Ostrzeżenia:</b><br/>{warning}",
+            normal
+        )
+    )
 
     story.append(Spacer(1,30))
 
@@ -271,12 +294,15 @@ def save_pdf():
         app_data["sequence"]
     )
 
-    story.append(
-        Preformatted(
-            formatted,
-            styles["Code"]
+    story.append(Spacer(1, 10))
+
+    for line in formatted:
+        story.append(
+            Paragraph(
+                line,
+                code
+            )
         )
-    )
 
     pdf.build(story)
 
