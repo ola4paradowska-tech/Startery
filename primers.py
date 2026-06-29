@@ -280,3 +280,89 @@ def find_best_primers(sequence, start, end, primer_length):
                 }
 
     return best_pair
+
+def read_fasta(filepath):
+
+    sequences = {}
+
+    current = None
+
+    with open(filepath, "r", encoding="utf-8") as f:
+
+        for line in f:
+
+            line = line.strip()
+
+            if not line:
+                continue
+
+            if line.startswith(">"):
+
+                current = line[1:]
+
+                sequences[current] = ""
+
+            else:
+
+                sequences[current] += line
+
+    return sequences
+
+def similarity(seq1, seq2):
+
+    matches = 0
+
+    for a, b in zip(seq1, seq2):
+
+        if a == b:
+            matches += 1
+
+    return matches / len(seq1) * 100
+
+import os
+
+from config import FASTA_REPORT_DIR
+
+
+def compare_fastas(file1, file2):
+
+    fasta1 = read_fasta(
+        os.path.join(
+            FASTA_REPORT_DIR,
+            file1
+        )
+    )
+
+    fasta2 = read_fasta(
+        os.path.join(
+            FASTA_REPORT_DIR,
+            file2
+        )
+    )
+
+    forward1 = ""
+    reverse1 = ""
+
+    forward2 = ""
+    reverse2 = ""
+
+    for name, seq in fasta1.items():
+
+        if "forward" in name.lower():
+            forward1 = seq
+
+        elif "reverse" in name.lower():
+            reverse1 = seq
+
+    for name, seq in fasta2.items():
+
+        if "forward" in name.lower():
+            forward2 = seq
+
+        elif "reverse" in name.lower():
+            reverse2 = seq
+
+    return (
+        similarity(forward1, forward2),
+        similarity(reverse1, reverse2)
+    )

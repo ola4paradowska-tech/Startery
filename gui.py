@@ -1,9 +1,11 @@
 import tkinter as tk
 from export import save_pdf, save_fasta
-from tkinter import messagebox
+from tkinter import ttk
 
 from config import *
 from primers import *
+from config import FASTA_REPORT_DIR
+from primers import compare_fastas
 
 def open_gene_window(gene_name, sequence):
 
@@ -40,11 +42,19 @@ def open_gene_window(gene_name, sequence):
 
     primer_button = tk.Button(
         left_frame,
-        text="Starter",
+        text="Startery",
         command=lambda: show_primer(right_frame)
     )
 
     primer_button.pack(fill="x", padx=30, pady=10)
+
+    compare_button = tk.Button(
+        left_frame,
+        text="Porównanie\nstarterów",
+        command=lambda: show_compare(right_frame)
+    )
+
+    compare_button.pack(fill="x", padx=10, pady=10)
 
     show_sequence(right_frame)
 
@@ -565,6 +575,109 @@ def show_primer(right_frame):
     )
 
     reset_button.pack(pady=20)
+
+def show_compare(right_frame):
+
+    files = sorted(
+        [
+            file
+            for file in os.listdir(FASTA_REPORT_DIR)
+            if file.endswith(".fasta")
+        ]
+    )
+
+    for widget in right_frame.winfo_children():
+        widget.destroy()
+
+    title = tk.Label(
+        right_frame,
+        text="Porównanie starterów",
+        font=("Arial", 18)
+    )
+    title.pack(pady=20)
+
+    tk.Label(
+        right_frame,
+        text="Starter 1"
+    ).pack(pady=(20, 5))
+
+    primer1 = ttk.Combobox(
+        right_frame,
+        values=files,
+        width=50,
+        state="readonly"
+    )
+
+    primer1.pack()
+
+    if files:
+        primer1.current(0)
+
+    tk.Label(
+        right_frame,
+        text="Starter 2"
+    ).pack(pady=(25, 5))
+
+    primer2 = ttk.Combobox(
+        right_frame,
+        values=files,
+        width=50,
+        state="readonly"
+    )
+
+    primer2.pack()
+
+    if len(files) > 1:
+        primer2.current(1)
+    elif files:
+        primer2.current(0)
+
+    compare_button = tk.Button(
+        right_frame,
+        text="Porównaj",
+        command=compare_selected
+    )
+
+    compare_button.pack(pady=20)
+
+    forward_result = tk.Label(
+        right_frame,
+        text="Forward: ---"
+    )
+
+    forward_result.pack()
+
+    reverse_result = tk.Label(
+        right_frame,
+        text="Reverse: ---"
+    )
+
+    reverse_result.pack()
+
+    app_data["forward_compare"] = forward_result
+    app_data["reverse_compare"] = reverse_result
+
+    app_data["compare_box1"] = primer1
+    app_data["compare_box2"] = primer2
+
+
+def compare_selected():
+
+    file1 = app_data["compare_box1"].get()
+    file2 = app_data["compare_box2"].get()
+
+    forward, reverse = compare_fastas(
+        file1,
+        file2
+    )
+
+    app_data["forward_compare"].config(
+        text=f"Forward: {forward:.1f}%"
+    )
+
+    app_data["reverse_compare"].config(
+        text=f"Reverse: {reverse:.1f}%"
+    )
 
 def reset_primers():
 

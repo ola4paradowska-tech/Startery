@@ -1,6 +1,3 @@
-import os
-import tkinter as tk
-
 from gui import *
 from config import *
 
