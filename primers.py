@@ -228,7 +228,6 @@ def find_best_primers(sequence, start, end, primer_length):
     best_pair = None
     best_score = -999999
 
-    # zakres wyszukiwania
     forward_min = max(0, start - margin - 1)
     forward_max = start + margin - primer_length
 
@@ -255,7 +254,6 @@ def find_best_primers(sequence, start, end, primer_length):
                 + reverse["score"]
             )
 
-            # kara za różnicę Tm
             pair_score -= abs(
                 forward["tm"] - reverse["tm"]
             ) * 10
