@@ -175,20 +175,6 @@ def fetch_gene_sequence(gene_id):
         "is_minus": is_minus,
         "length": len(gene_sequence)
     }
-def prepare_data():
-
-    if not selected_record:
-        messagebox.showwarning(
-            "Brak wyboru",
-            "Najpierw wybierz gen."
-        )
-        return
-
-    gene_info = fetch_gene_sequence(
-        selected_record["id"]
-    )
-
-
 
 def save_fasta(gene_info):
 
